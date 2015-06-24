@@ -8,15 +8,15 @@ Priority queues implemented as binary heaps.
 
 ## API
 
------------------------------- ----------------------------------------------------
-heap.heap(...) -> push, pop    create a heap API from a stack API
-heap.cdataheap(h) -> h         create a fixed-capacity cdata-based heap
-heap.valueheap([h]) -> h       create a heap for Lua values
-h:push(val)                    push a value
-h:pop() -> val                 pop highest value
-h:peek() -> val                get highest value without popping it
-h:length() -> n                number of elements in heap
------------------------------- ----------------------------------------------------
+-------------------------------- ----------------------------------------------------
+`heap.heap(...) -> push, pop`    create a heap API from a stack API
+`heap.cdataheap(h) -> h`         create a fixed-capacity cdata-based heap
+`heap.valueheap([h]) -> h`       create a heap for Lua values
+`h:push(val)`                    push a value
+`h:pop() -> val`                 pop highest value
+`h:peek() -> val`                get highest value without popping it
+`h:length() -> n`                number of elements in heap
+-------------------------------- ----------------------------------------------------
 
 ## API Notes
 
