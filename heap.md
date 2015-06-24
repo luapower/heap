@@ -18,7 +18,7 @@ Priority queues implemented as binary heaps.
 `h:length() -> n`                number of elements in heap
 -------------------------------- ----------------------------------------------------
 
-## API Notes
+__NOTE__:
 
   * pushing and popping is O(log(n)).
   * a cdata heap can hold size-1 elements (element 0 is used for swapping).
