@@ -21,19 +21,20 @@ h:length() -> n                number of elements in heap
 ## API Notes
 
   * pushing and popping is O(log(n)).
+  * a cdata heap can hold size-1 elements (element 0 is used for swapping).
   * trying to push nil into a value heap raises an error.
   * values with the same priority are popped in random order.
 
-### `heap.heap(add, rem, get, set, len[, cmp]) -> push, pop`
+### `heap.heap(push, pop, rootval, len[, cmp]) -> push, pop`
 
 Create a heap API from a stack API:
 
-	add(v)         add a value to the end
-	rem(v)         remove a failue from the end
-	get(i) -> v    get value at index (first index is 1)
-	set(i, v)      set value at index
-	len() -> n     stack size
-   cmp(v1, v2)    comparison function (optional)
+	push(v)         add a value to the top of the stack
+	pop()           remove the value at the top of the stack
+	rootval() -> v  get the root value (the value at index 1)
+	swap(i, j)      swap two values (indices start at 1
+	len() -> n      number of elements in stack
+   cmp(i, j)       comparison function (optional)
 
 ### `heap.cdataheap(h) -> h`
 
@@ -44,6 +45,34 @@ Create a cdata heap. The arg `h` must contain:
   * `data`, `length`: the pre-allocated heap itself.
   * `cmp`: a comparison function (optional).
 
+#### Example:
+
+	local h = heap.cdataheap{
+		size = 100,
+		ctype = [[
+			struct {
+				int priority;
+				int order;
+			}
+		]],
+		cmp = function(a, b)
+			if a.priority == b.priority then
+				return a.order > b.order
+			end
+			return a.priority < b.priority
+		end}
+	h:push{priority = 20, order = 1}
+	h:push{priority = 10, order = 2}
+	h:push{priority = 10, order = 3}
+	h:push{priority = 20, order = 4}
+	assert(h:pop().order == 3)
+	assert(h:pop().order == 2)
+	assert(h:pop().order == 4)
+	assert(h:pop().order == 1)
+
+Note: the `order` field in this example is used to stabilize
+the order in which elements with the same priority are popped.
+
 ### `heap.valueheap([h]) -> h`
 
 Create a value heap. The arg `h` can contain:
@@ -51,7 +80,7 @@ Create a value heap. The arg `h` can contain:
   * `cmp`: a comparison function (optional).
   * the pre-allocated heap itself, in the array part of the table.
 
-## Example:
+#### Example:
 
 	local h = heap.valueheap{cmp = function(a, b)
 			return a.priority < b.priority
@@ -59,3 +88,4 @@ Create a value heap. The arg `h` can contain:
 	h:push{priority = 20, etc = 'bar'}
 	h:push{priority = 10, etc = 'foo'}
 	assert(h:pop().priority == 10)
+	assert(h:pop().priority == 20)

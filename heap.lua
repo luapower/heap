@@ -2,29 +2,19 @@
 --Priority queue implemented as a binary heap.
 --Written by Cosmin Apreutesei. Public Domain.
 
+if not ... then require'heap_test'; return end
+
 --heap algorithm working over abstract API that counts from one.
 
 local assert, floor = assert, math.floor
 
-local function heap(add, rem, get, set, length, cmp)
-
-	local function swap(i1, i2)
-		local v1 = get(i1)
-		set(i1, get(i2))
-		set(i2, v1)
-	end
-
-	cmp = cmp or function(a, b) return a < b end
-
-	local function less(i1, i2)
-		return cmp(get(i1), get(i2))
-	end
+local function heap(add, remove, rootval, swap, length, cmp)
 
 	local function push(val)
 		add(val)
 		local child = length()
 		local parent = floor(child / 2)
-		while child > 1 and less(child, parent) do
+		while child > 1 and cmp(child, parent) do
 			swap(child, parent)
 			child = parent
 			parent = floor(child / 2)
@@ -33,19 +23,22 @@ local function heap(add, rem, get, set, length, cmp)
 
 	local function pop()
 		if length() < 2 then
-			return rem()
+			local val = rootval()
+			remove()
+			return val
 		end
-		local val = get(1)
-		set(1, rem()) --replace root with last value
-		local root = 1
-		local last = length()
+		local val = rootval()
+		local root, last = 1, length()
+		swap(root, last)
+		remove()
+		last = last - 1
 		if last > 1 then --move root back to its place
 			local child = root * 2
 			while child <= last do
-				if child + 1 <= last and less(child + 1, child) then
+				if child + 1 <= last and cmp(child + 1, child) then
 					child = child + 1
 				end
-				if less(child, root) then
+				if cmp(child, root) then
 					swap(root, child)
 					root = child
 				else
@@ -67,19 +60,23 @@ local ffi
 local function cdataheap(h)
 	ffi = ffi or require'ffi'
 	assert(h and h.size, 'size expected')
-	assert(h.size > 1, 'invalid size')
-	assert(h.data or h.ctype, 'data or ctype expected')
-	h.data = h.data or ffi.new(ffi.typeof('$[?]', ffi.typeof(h.ctype)), h.size)
-	local t, n, maxn = h.data, (h.length or 0)-1, h.size-1
-	local function add(v) assert(n < maxn, 'buffer overflow'); n=n+1; t[n]=v end
-	local function rem() assert(n >= 0, 'buffer underflow'); local v=t[n]; n=n-1; return v end
-	local function get(i) return t[i-1] end
-	local function set(i, v) t[i-1]=v end
+	assert(h.size >= 2, 'size too small')
+	assert(h.ctype, 'ctype expected')
+	local ctype = ffi.typeof(h.ctype)
+	h.data = h.data or ffi.new(ffi.typeof('$[?]', ctype), h.size)
+	local t, n, maxn = h.data, h.length or 0, h.size-1
+	local function add(v) assert(n < maxn, 'buffer overflow'); n=n+1; t[n]=v; end
+	local function rem() assert(n > 0, 'buffer underflow'); n=n-1; end
+	local function rootval() return ffi.new(ctype, t[1]) end
+	local function swap(i, j) t[0]=t[i]; t[i]=t[j]; t[j]=t[0] end
 	local function length() return n end
-	local push, pop = heap(add, rem, get, set, length, h.cmp)
+	local cmp = h.cmp and
+		function(i, j) return h.cmp(t[i], t[j]) end or
+		function(i, j) return t[i] < t[j] end
+	local push, pop = heap(add, rem, rootval, swap, length, cmp)
 	function h:push(val) push(val) end
 	function h:pop() return pop(pop) end
-	function h:peek() return get(0) end
+	function h:peek() return rootval() end
 	h.length = length
 	return h
 end
@@ -90,35 +87,19 @@ local function valueheap(h)
 	h = h or {}
 	local t, tins, trem = h, table.insert, table.remove
 	local function add(v) assert(v ~= nil, 'invalid value'); tins(t, v) end
-	local function rem() assert(#t > 0, 'buffer underflow'); return trem(t) end
-	local function get(i) return t[i] end
-	local function set(i, v) t[i]=v end
+	local function rem() assert(#t > 0, 'buffer underflow'); trem(t) end
+	local function rootval() return t[1] end
+	local function swap(i, j) t[i], t[j] = t[j], t[i] end
 	local function length() return #t end
-	local push, pop = heap(add, rem, get, set, length, h.cmp)
+	local cmp = h.cmp and
+		function(i, j) return h.cmp(t[i], t[j]) end or
+		function(i, j) return t[i] < t[j] end
+	local push, pop = heap(add, rem, rootval, swap, length, cmp)
 	function h:push(val) push(val) end
 	function h:pop() return pop(pop) end
-	function h:peek() return get(1) end
+	function h:peek() return rootval() end
 	h.length = length
 	return h
-end
-
---test
-
-if not ... then
-	local size = 100000
-	local function test(h)
-		for i = 1, size do
-		    h:push(math.random(1, size))
-		end
-		local v0 = h:pop()
-		for i=2,size do
-			local v = h:pop()
-			assert(v >= v0)
-			v0 = v
-		end
-	end
-	test(valueheap())
-	test(cdataheap{ctype = 'int', size = size})
 end
 
 return {
