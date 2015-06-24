@@ -6,12 +6,18 @@
 
 local assert, floor = assert, math.floor
 
-local function heap(add, rem, get, set, less, length)
+local function heap(add, rem, get, set, length, cmp)
 
 	local function swap(i1, i2)
 		local v1 = get(i1)
 		set(i1, get(i2))
 		set(i2, v1)
+	end
+
+	cmp = cmp or function(a, b) return a < b end
+
+	local function less(i1, i2)
+		return cmp(get(i1), get(i2))
 	end
 
 	local function push(val)
@@ -64,15 +70,13 @@ local function cdataheap(h)
 	assert(h.size > 1, 'invalid size')
 	assert(h.data or h.ctype, 'data or ctype expected')
 	h.data = h.data or ffi.new(ffi.typeof('$[?]', ffi.typeof(h.ctype)), h.size)
-	local cmp = h.cmp or function(a, b) return a < b end
 	local t, n, maxn = h.data, h.length or 0, h.size-1
 	local function add(v) assert(n < maxn, 'buffer overflow'); n=n+1; t[n]=v end
 	local function rem() assert(n >= 1, 'buffer underflow'); local v=t[n]; n=n-1; return v end
 	local function get(i) return t[i] end
 	local function set(i, v) t[i]=v end
-	local function less(i1, i2) return cmp(t[i1], t[i2]) end
 	local function length() return n end
-	local push, pop = heap(add, rem, get, set, less, length)
+	local push, pop = heap(add, rem, get, set, length, h.cmp)
 	function h:push(val) push(val) end
 	function h:pop() return pop(pop) end
 	function h:peek() return get(1) end
@@ -84,15 +88,13 @@ end
 
 local function valueheap(h)
 	h = h or {}
-	h.cmp = h.cmp or function(a, b) return a < b end
-	local t, cmp, tins, trem = h, h.cmp, table.insert, table.remove
+	local t, tins, trem = h, table.insert, table.remove
 	local function add(v) assert(v ~= nil, 'invalid value'); tins(t, v) end
 	local function rem() assert(#t > 0, 'buffer underflow'); return trem(t) end
 	local function get(i) return t[i] end
 	local function set(i, v) t[i]=v end
-	local function less(i1, i2) return cmp(t[i1], t[i2]) end
 	local function length() return #t end
-	local push, pop = heap(add, rem, get, set, less, length)
+	local push, pop = heap(add, rem, get, set, length, h.cmp)
 	function h:push(val) push(val) end
 	function h:pop() return pop(pop) end
 	function h:peek() return get(1) end
