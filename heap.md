@@ -4,7 +4,7 @@ tagline: priority queues
 
 ## `local heap = require'heap'`
 
-Priority queue implemented as a binary heap.
+Priority queues implemented as binary heaps.
 
 ## API
 
