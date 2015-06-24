@@ -21,7 +21,6 @@ h:length() -> n                number of elements in heap
 ## API Notes
 
   * pushing and popping is O(log(n)).
-  * a cdata heap can store size-1 elements (the first element is not used).
   * trying to push nil into a value heap raises an error.
   * values with the same priority are popped in random order.
 
