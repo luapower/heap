@@ -38,6 +38,7 @@ Create a heap API from a stack API:
 ### `heap.cdataheap(h) -> h`
 
 Create a cdata heap. The arg `h` must contain:
+
 	* `size`: heap capacity.
 	* `ctype`: element type, or
 	* `data`, `length`: the pre-allocated heap itself.
@@ -46,6 +47,7 @@ Create a cdata heap. The arg `h` must contain:
 ### `heap.valueheap([h]) -> h`
 
 Create a value heap. The arg `h` can contain:
+
 	* `cmp`: a comparison function (optional).
    * the pre-allocated heap itself, in the array part of the table.
 
