@@ -38,11 +38,11 @@ Create a heap API from a stack API:
 
 ### `heap.cdataheap(h) -> h`
 
-Create a cdata heap. The arg `h` must contain:
+Create a cdata heap over table `h` which must contain:
 
-  * `size`: heap capacity.
-  * `ctype`: element type, or
-  * `data`, `length`: the pre-allocated heap itself.
+  * `size`: heap capacity (required).
+  * `ctype`: element type (required).
+  * `data`, `length`: a pre-allocated heap (optional).
   * `cmp`: a comparison function (optional).
 
 #### Example:
@@ -77,10 +77,10 @@ the order in which elements with the same priority are popped.
 
 ### `heap.valueheap([h]) -> h`
 
-Create a value heap. The arg `h` can contain:
+Create a value heap from table `h`, which can contain:
 
   * `cmp`: a comparison function (optional).
-  * the pre-allocated heap itself, in the array part of the table.
+  * a pre-allocated heap in the array part of the table (optional).
 
 #### Example:
 
