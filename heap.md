@@ -25,16 +25,16 @@ __NOTE__:
   * trying to push nil into a value heap raises an error.
   * values that compare equally are popped in random order.
 
-### `heap.heap(push, pop, rootval, len[, cmp]) -> push, pop`
+### `heap.heap(push, pop, rootval, len, cmp) -> push, pop`
 
 Create a heap API from a stack API:
 
-	push(v)         add a value to the top of the stack
-	pop()           remove the value at the top of the stack
-	rootval() -> v  get the root value (the value at index 1)
-	swap(i, j)      swap two values (indices start at 1)
-	len() -> n      number of elements in stack
-   cmp(i, j)       comparison function (optional)
+	push(v)              add a value to the top of the stack
+	pop()                remove the value at the top of the stack
+	rootval() -> v       get the root value (the value at index 1)
+	swap(i, j)           swap two values (indices start at 1)
+	len() -> n           number of elements in stack
+   cmp(i, j) -> bool    compare elements
 
 ### `heap.cdataheap(h) -> h`
 
