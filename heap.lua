@@ -85,12 +85,12 @@ end
 
 local function valueheap(h)
 	h = h or {}
-	local t, tins, trem = h, table.insert, table.remove
-	local function add(v) assert(v ~= nil, 'invalid value'); tins(t, v) end
-	local function rem() assert(#t > 0, 'buffer underflow'); trem(t) end
+	local t, n = h, 0
+	local function add(v) assert(v ~= nil, 'invalid value'); n=n+1; t[n]=v; end
+	local function rem() assert(n > 0, 'buffer underflow'); t[n]=nil; n=n-1 end
 	local function rootval() return t[1] end
 	local function swap(i, j) t[i], t[j] = t[j], t[i] end
-	local function length() return #t end
+	local function length() return n end
 	local cmp = h.cmp and
 		function(i, j) return h.cmp(t[i], t[j]) end or
 		function(i, j) return t[i] < t[j] end

@@ -1,16 +1,6 @@
 local heap = require'heap'
-
-local function bench(h, size)
-	for i=1,size do
-	    h:push(math.random(1, size))
-	end
-	local v0 = h:pop()
-	for i=2,size do
-		local v = h:pop()
-		assert(v >= v0)
-		v0 = v
-	end
-end
+local time = require'time'
+local ffi = require'ffi'
 
 local function example1()
 	local h = heap.cdataheap{
@@ -47,7 +37,32 @@ local function example2()
 	assert(h:pop().priority == 20)
 end
 
-bench(heap.valueheap{size=100000}, 100000)
-bench(heap.cdataheap{ctype = 'int', size = 100000+1}, 100000)
+local function bench(type, h, size, valgen)
+	local cmp = h.cmp or function(a, b) return a < b end
+	local t0 = time.clock()
+	for i=1,size do
+	    h:push(valgen(h))
+	end
+	print(string.format('push speed: %-12s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
+	t0 = time.clock()
+	local v0 = h:pop()
+	for i=2,size do
+		local v = h:pop()
+		assert(not cmp(v, v0))
+		v0 = v
+	end
+	print(string.format('pop  speed: %-12s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
+end
+
+local size = 100000
+local function ngen(h) return math.random(1, h.size) end
+bench('Lua values',  heap.valueheap{size=size}, size, ngen)
+bench('int32',    heap.cdataheap{ctype = 'int32_t', size = size+1}, size, ngen)
+local v3t = ffi.typeof'struct { double x, y, z; }'
+local v3 = v3t()
+local function vgen(h) v3.x = ngen(h); return v3 end
+local function vcmp(v1, v2) return v1.x < v2.x end
+bench('vector3', heap.cdataheap{ctype = v3t, size = size+1, cmp = vcmp}, size, vgen)
+
 example1()
 example2()
