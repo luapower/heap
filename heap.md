@@ -106,7 +106,6 @@ assert(h:pop().priority == 20)
 
 ## TODO
 
-  * heapify the initial array
+  * heapifying the initial array
   * merge(h), meld(h)
-  * delete(v)
   * replace(v)
