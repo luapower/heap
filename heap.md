@@ -28,7 +28,7 @@ __API Notes__:
   * trying to push nil into a value heap raises an error.
   * values that compare equally are popped in random order.
 
-### `heap.heap(push, pop, rootval, len, cmp) -> push, pop`
+### `heap.heap(push, pop, swap, len, cmp) -> push, pop`
 
 Create a heap API:
 
