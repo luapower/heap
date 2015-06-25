@@ -85,7 +85,7 @@ end
 
 local function valueheap(h)
 	h = h or {}
-	local t, n = h, 0
+	local t, n = h, #h
 	local function add(v) assert(v ~= nil, 'invalid value'); n=n+1; t[n]=v; end
 	local function rem() assert(n > 0, 'buffer underflow'); t[n]=nil; n=n-1 end
 	local function rootval() return t[1] end
