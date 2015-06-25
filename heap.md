@@ -4,7 +4,11 @@ tagline: priority queues
 
 ## `local heap = require'heap'`
 
-Priority queues implemented as binary heaps.
+Priority queues implemented as binary heaps. A binary heap is a binary
+tree that maintains the lowest (or highest) value at the root.
+The tree is laid as an implicit data structure over an array.
+Pushing and popping values from the heap is O(log(n)) and doesn't
+use additional memory.
 
 ## API
 
@@ -12,29 +16,35 @@ Priority queues implemented as binary heaps.
 `heap.heap(...) -> push, pop`    create a heap API from a stack API
 `heap.cdataheap(h) -> h`         create a fixed-capacity cdata-based heap
 `heap.valueheap([h]) -> h`       create a heap for Lua values
-`h:push(val)`                    push a value
-`h:pop() -> val`                 pop highest value
-`h:peek() -> val`                get highest value without popping it
+`h:push(val) -> index`           push a value
+`h:pop([index][, dst]) -> val`   pop value (root value at default index 1)
+`h:peek([index][, dst]) -> val`  get value without popping it
 `h:length() -> n`                number of elements in heap
 -------------------------------- ----------------------------------------------------
 
-__NOTE__:
+__API Notes__:
 
-  * pushing and popping is O(log(n)).
   * a cdata heap can hold size-1 elements (element 0 is used for swapping).
   * trying to push nil into a value heap raises an error.
   * values that compare equally are popped in random order.
 
 ### `heap.heap(push, pop, rootval, len, cmp) -> push, pop`
 
-Create a heap API from a stack API:
+Create a heap API:
+
+	push(v) -> i          drop a value into the heap and return its index
+	pop([i])              remove the value at index i (root is at index 1)
+
+from a stack API:
 
 	push(v)              add a value to the top of the stack
 	pop()                remove the value at the top of the stack
-	rootval() -> v       get the root value (the value at index 1)
 	swap(i, j)           swap two values (indices start at 1)
 	len() -> n           number of elements in stack
    cmp(i, j) -> bool    compare elements
+
+The heap can be a min-heap or max-heap depending on the comparison
+function. If cmp(i, j) returns a[i] < a[j] then it's a min-heap.
 
 ### `heap.cdataheap(h) -> h`
 
@@ -93,3 +103,10 @@ h:push{priority = 10, etc = 'foo'}
 assert(h:pop().priority == 10)
 assert(h:pop().priority == 20)
 ~~~
+
+## TODO
+
+  * heapify the initial array
+  * merge(h), meld(h)
+  * delete(v)
+  * replace(v)

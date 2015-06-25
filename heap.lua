@@ -8,7 +8,7 @@ if not ... then require'heap_test'; return end
 
 local assert, floor = assert, math.floor
 
-local function heap(add, remove, rootval, swap, length, cmp)
+local function heap(add, remove, swap, length, cmp)
 
 	local function push(val)
 		add(val)
@@ -19,16 +19,17 @@ local function heap(add, remove, rootval, swap, length, cmp)
 			child = parent
 			parent = floor(child / 2)
 		end
+		return child
 	end
 
-	local function pop()
-		if length() < 2 then
-			local val = rootval()
+	local function pop(root)
+		root = root or 1
+		local last = length()
+		assert(root >= 1 and root <= last, 'invalid index')
+		if last == 1 then
 			remove()
-			return val
+			return
 		end
-		local val = rootval()
-		local root, last = 1, length()
 		swap(root, last)
 		remove()
 		last = last - 1
@@ -47,7 +48,6 @@ local function heap(add, remove, rootval, swap, length, cmp)
 				child = root * 2
 			end
 		end
-		return val
 	end
 
 	return push, pop
@@ -67,16 +67,24 @@ local function cdataheap(h)
 	local t, n, maxn = h.data, h.length or 0, h.size-1
 	local function add(v) assert(n < maxn, 'buffer overflow'); n=n+1; t[n]=v; end
 	local function rem() assert(n > 0, 'buffer underflow'); n=n-1; end
-	local function rootval() return ffi.new(ctype, t[1]) end
 	local function swap(i, j) t[0]=t[i]; t[i]=t[j]; t[j]=t[0] end
 	local function length() return n end
 	local cmp = h.cmp and
 		function(i, j) return h.cmp(t[i], t[j]) end or
 		function(i, j) return t[i] < t[j] end
-	local push, pop = heap(add, rem, rootval, swap, length, cmp)
+	local push, pop = heap(add, rem, swap, length, cmp)
+	local function get(i, box)
+		i = i or 1
+		assert(i >= 1 and i <= n, 'invalid index')
+		if box then
+			box[0] = t[i]
+		else
+			return ffi.new(ctype, t[i])
+		end
+	end
 	function h:push(val) push(val) end
-	function h:pop() return pop(pop) end
-	function h:peek() return rootval() end
+	function h:pop(i, box) local v=get(i, box); pop(i); return v end
+	function h:peek(i, box) return get(i, box) end
 	h.length = length
 	return h
 end
@@ -88,16 +96,20 @@ local function valueheap(h)
 	local t, n = h, #h
 	local function add(v) assert(v ~= nil, 'invalid value'); n=n+1; t[n]=v; end
 	local function rem() assert(n > 0, 'buffer underflow'); t[n]=nil; n=n-1 end
-	local function rootval() return t[1] end
 	local function swap(i, j) t[i], t[j] = t[j], t[i] end
 	local function length() return n end
 	local cmp = h.cmp and
 		function(i, j) return h.cmp(t[i], t[j]) end or
 		function(i, j) return t[i] < t[j] end
-	local push, pop = heap(add, rem, rootval, swap, length, cmp)
+	local push, pop = heap(add, rem, swap, length, cmp)
+	local function get(i)
+		i = i or 1
+		assert(i >= 1 and i <= n, 'invalid index')
+		return t[i]
+	end
 	function h:push(val) push(val) end
-	function h:pop() return pop(pop) end
-	function h:peek() return rootval() end
+	function h:pop(i) local v=get(i); pop(i); return v end
+	function h:peek(i) return get(i) end
 	h.length = length
 	return h
 end
