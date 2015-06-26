@@ -34,7 +34,7 @@ __API Notes__:
 Create a heap API:
 
 	push(v) -> i         drop a value into the heap and return its index
-	pop([i])             remove the value at index i (root is at index 1)
+	pop(i)               remove the value at index i (root is at index 1)
 	rebalance(i)         rebalance the heap after the value at i has been changed
 
 from a stack API:
