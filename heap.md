@@ -18,6 +18,7 @@ use additional memory.
 `heap.valueheap([h]) -> h`       create a heap for Lua values
 `h:push(val) -> index`           push a value
 `h:pop([index][, dst]) -> val`   pop value (root value at default index 1)
+`h:replace(index, val)`          replace value at index
 `h:peek([index][, dst]) -> val`  get value without popping it
 `h:length() -> n`                number of elements in heap
 -------------------------------- ----------------------------------------------------
@@ -28,12 +29,13 @@ __API Notes__:
   * trying to push nil into a value heap raises an error.
   * values that compare equally are popped in random order.
 
-### `heap.heap(push, pop, swap, len, cmp) -> push, pop`
+### `heap.heap(push, pop, swap, len, cmp) -> push, pop, rebalance`
 
 Create a heap API:
 
 	push(v) -> i         drop a value into the heap and return its index
 	pop([i])             remove the value at index i (root is at index 1)
+	rebalance(i)         rebalance the heap after the value at i has been changed
 
 from a stack API:
 
@@ -108,4 +110,3 @@ assert(h:pop().priority == 20)
 
   * heapifying the initial array
   * merge(h), meld(h)
-  * replace(v)

@@ -37,12 +37,24 @@ local function test_example2()
 	assert(h:pop().priority == 20)
 end
 
+local function aeq(h, t)
+	assert(#h == #t)
+	for i=1,#t do assert(h[i] == t[i]) end
+end
+
 local function test_remove()
 	local h = heap.valueheap{1, 2, 100, 3, 4, 200, 300} -- 1-(2-(3, 4), 100-(200, 300))
 	h:pop(2)
-	local t = {1, 3, 100, 300, 4, 200} --2 replaced by 300; 300 swapped with 3
-	assert(#h == #t)
-	for i=1,#t do assert(h[i] == t[i]) end
+	aeq(h, {1, 3, 100, 300, 4, 200}) --2 replaced by 300; 300 swapped with 3
+end
+
+local function test_replace()
+	local h = heap.valueheap{1, 10, 10, 100, 100, 100, 100}
+	h:replace(2, 300)
+	aeq(h, {1, 100, 10, 300, 100, 100, 100}) --moved down
+	local h = heap.valueheap{1, 10, 10, 100, 100, 100, 100}
+	h:replace(4, 5)
+	aeq(h, {1, 5, 10, 10, 100, 100, 100}) --moved up
 end
 
 local function bench(type, h, size, valgen)
@@ -77,4 +89,5 @@ end
 test_example1()
 test_example2()
 test_remove()
+test_replace()
 benchmark()
