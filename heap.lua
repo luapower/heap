@@ -4,9 +4,10 @@
 
 if not ... then require'heap_test'; return end
 
---heap algorithm working over abstract API that counts from one.
-
+local ffi --init on demand so that the module can be used without luajit
 local assert, floor = assert, math.floor
+
+--heap algorithm working over abstract API that counts from one.
 
 local function heap(add, remove, swap, length, cmp)
 
@@ -56,8 +57,6 @@ local function heap(add, remove, swap, length, cmp)
 end
 
 --cdata heap working over a cdata array
-
-local ffi
 
 local function cdataheap(h)
 	ffi = ffi or require'ffi'
