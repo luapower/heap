@@ -33,13 +33,13 @@ __API Notes__:
 
 Create a heap API:
 
-	push(...) -> i       drop a value into the heap and return its index
+	push(v) -> i         drop a value into the heap and return its index
 	pop(i)               remove the value at index i (root is at index 1)
 	rebalance(i)         rebalance the heap after the value at i has been changed
 
 from a stack API:
 
-	push(...)            add a value to the top of the stack
+	push(v)              add a value to the top of the stack
 	pop()                remove the value at the top of the stack
 	swap(i, j)           swap two values (indices start at 1)
 	len() -> n           number of elements in stack
@@ -53,16 +53,15 @@ Stack indices are assumed to be consecutive.
 
 Create a cdata heap over table `h` which must contain:
 
-  * `size`: heap capacity (required).
   * `ctype`: element type (required).
-  * `data`, `length`: a pre-allocated heap (optional).
+  * `min_capacity`: heap starting capacity (optional, defaults to 0).
   * `cmp`: a comparison function (optional).
+  * `dynarray`: alternative `glue.dynarray` implementation (optional).
 
 #### Example:
 
 ~~~{.lua}
 local h = heap.cdataheap{
-	size = 100,
 	ctype = [[
 		struct {
 			int priority;

@@ -4,7 +4,6 @@
 
 if not ... then require'heap_test'; return end
 
-local ffi --init on demand so that the module can be used without luajit
 local assert, floor = assert, math.floor
 
 --heap algorithm working over abstract API that counts from one.
@@ -36,8 +35,8 @@ local function heap(add, remove, swap, length, cmp)
 		return parent
 	end
 
-	local function push(...)
-		add(...)
+	local function push(v)
+		add(v)
 		return moveup(length())
 	end
 
@@ -56,27 +55,41 @@ local function heap(add, remove, swap, length, cmp)
 	return push, pop, rebalance
 end
 
---cdata heap working over a cdata array
+--cdata heap working over a cdata dynamic array.
 
 local function cdataheap(h)
-	ffi = ffi or require'ffi'
-	assert(h and h.size, 'size expected')
-	assert(h.size >= 2, 'size too small')
-	assert(h.ctype, 'ctype expected')
+
+	local ffi = require'ffi'
+	local glue = require'glue'
+
 	local ctype = ffi.typeof(h.ctype)
-	h.data = h.data or ffi.new(ffi.typeof('$[?]', ctype), h.size)
-	local t, n, maxn = h.data, h.length or 0, h.size-1
-	local function add(v) n=n+1; t[n]=v end
-	local function rem() n=n-1 end
-	local function swap(i, j) t[0]=t[i]; t[i]=t[j]; t[j]=t[0] end
-	local function length() return n end
-	local cmp = h.cmp and
-		function(i, j) return h.cmp(t[i], t[j]) end or
-		function(i, j) return t[i] < t[j] end
+	local arr = h.dynarray or glue.dynarray(ffi.typeof('$[?]', ctype), h.min_capacity)
+	local t, n = nil, 0
+
+	local function add(v)
+		n = n + 1
+		t = arr(n + 1) --elem 0 is temp space for swapping.
+		t[n] = v
+	end
+	local function rem()
+		n = n - 1
+	end
+	local function swap(i, j)
+		t[0]=t[i]; t[i]=t[j]; t[j]=t[0]
+	end
+	local function length()
+		return n
+	end
+	local cmp = h.cmp
+		and function(i, j) return h.cmp(t[i], t[j]) end
+		or  function(i, j) return t[i] < t[j] end
+
 	local push, pop, rebalance = heap(add, rem, swap, length, cmp)
 
 	local function get(i, box)
-		assert(i >= 1 and i <= n, 'invalid index')
+		if not (i >= 1 and i <= n) then
+			return nil
+		end
 		if box then
 			box[0] = t[i]
 		else
@@ -84,7 +97,6 @@ local function cdataheap(h)
 		end
 	end
 	function h:push(v)
-		assert(n < maxn, 'buffer overflow')
 		push(v)
 	end
 	function h:pop(i, box)
@@ -121,7 +133,6 @@ local function valueheap(h)
 	local push, pop, rebalance = heap(add, rem, swap, length, cmp)
 
 	local function get(i)
-		assert(i >= 1 and i <= n, 'invalid index')
 		return t[i]
 	end
 	function h:push(v)

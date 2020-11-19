@@ -2,9 +2,21 @@ local heap = require'heap'
 local time = require'time'
 local ffi = require'ffi'
 
+local function test_order()
+	local h = heap.valueheap()
+	for i = 1, 100000 do
+		h:push(math.random())
+	end
+	local n = -1/0
+	while h:length() > 0 do
+		local n0 = n
+		n = h:pop()
+		assert(n >= n0)
+	end
+end
+
 local function test_example1()
 	local h = heap.cdataheap{
-		size = 100,
 		ctype = [[
 			struct {
 				int priority;
@@ -76,9 +88,9 @@ end
 
 local function benchmark()
 	local size = 100000
-	local function ngen(h) return math.random(1, h.size) end
-	bench('Lua values',  heap.valueheap{size=size}, size, ngen)
-	bench('int32',       heap.cdataheap{ctype = 'int32_t', size = size+1}, size, ngen)
+	local function ngen(h) return math.random(1, size) end
+	bench('Lua values',  heap.valueheap{}                 , size, ngen)
+	bench('int32',       heap.cdataheap{ctype = 'int32_t'}, size, ngen)
 	local v3t = ffi.typeof'struct { double x, y, z; }'
 	local v3 = v3t()
 	local function vgen(h) v3.x = ngen(h); return v3 end
@@ -86,22 +98,7 @@ local function benchmark()
 	bench('vector3', heap.cdataheap{ctype = v3t, size = size+1, cmp = vcmp}, size, vgen)
 end
 
-local h = heap.valueheap()
-
-h:push(5)
-h:push(12)
-h:push(3)
-h:push(2)
-h:push(1)
-h:push(10)
-h:push(11)
-h:push(7)
-
-pp(h)
-
-
-do return end
-
+test_order()
 test_example1()
 test_example2()
 test_remove()
