@@ -52,6 +52,10 @@ local function heap(add, remove, swap, length, cmp)
 		end
 	end
 
+	local function find(v)
+
+	end
+
 	return push, pop, rebalance
 end
 
@@ -127,9 +131,9 @@ local function valueheap(h)
 	local function rem() t[n]=nil; n=n-1 end
 	local function swap(i, j) t[i], t[j] = t[j], t[i] end
 	local function length() return n end
-	local cmp = h.cmp and
-		function(i, j) return h.cmp(t[i], t[j]) end or
-		function(i, j) return t[i] < t[j] end
+	local cmp = h.cmp
+		and function(i, j) return h.cmp(t[i], t[j]) end
+		or  function(i, j) return t[i] < t[j] end
 	local push, pop, rebalance = heap(add, rem, swap, length, cmp)
 
 	local function get(i)

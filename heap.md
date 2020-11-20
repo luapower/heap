@@ -25,8 +25,6 @@ use additional memory.
 
 __API Notes__:
 
-  * a cdata heap can hold size-1 elements (element 0 is used for swapping).
-  * trying to push nil into a value heap raises an error.
   * values that compare equally are popped in random order.
 
 ### `heap.heap(push, pop, swap, len, cmp) -> push, pop, rebalance`
@@ -57,6 +55,8 @@ Create a cdata heap over table `h` which must contain:
   * `min_capacity`: heap starting capacity (optional, defaults to 0).
   * `cmp`: a comparison function (optional).
   * `dynarray`: alternative `glue.dynarray` implementation (optional).
+
+Note: `cdata` heaps are 1-indexed just like value heaps.
 
 #### Example:
 
@@ -93,6 +93,8 @@ Create a value heap from table `h`, which can contain:
 
   * `cmp`: a comparison function (optional).
   * a pre-allocated heap in the array part of the table (optional).
+
+Note: trying to push `nil` into a value heap raises an error.
 
 #### Example:
 
