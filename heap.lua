@@ -52,11 +52,37 @@ local function heap(add, remove, swap, length, cmp)
 		end
 	end
 
-	local function find(v)
+	return push, pop, rebalance
+end
 
+--common methods for both cdata and value heaps.
+
+function heap_mixin(h, INDEX)
+
+	function h:find(v)
+		for i,v1 in ipairs(self) do
+			if v1 == v then
+				return i
+			end
+		end
+		return nil
 	end
 
-	return push, pop, rebalance
+	if INDEX ~= nil then
+		function h:find(v) --O(1)
+			return v[INDEX]
+		end
+	else
+		function h:find(v) --O(n)
+			for i,v1 in ipairs(self) do
+				if v1 == v then
+					return i
+				end
+			end
+			return nil
+		end
+	end
+
 end
 
 --cdata heap working over a cdata dynamic array.
@@ -70,16 +96,36 @@ local function cdataheap(h)
 	local arr = h.dynarray or glue.dynarray(ffi.typeof('$[?]', ctype), h.min_capacity)
 	local t, n = nil, 0
 
-	local function add(v)
-		n = n + 1
-		t = arr(n + 1) --elem 0 is temp space for swapping.
-		t[n] = v
-	end
-	local function rem()
-		n = n - 1
-	end
-	local function swap(i, j)
-		t[0]=t[i]; t[i]=t[j]; t[j]=t[0]
+	local add, rem, swap
+	local INDEX = h.index_key
+	if INDEX ~= nil then --for O(n) removal.
+		function add(v)
+			n = n + 1
+			t = arr(n + 1) --elem 0 is temp space for swapping.
+			t[n] = v
+			t[n][INDEX] = n
+		end
+		function rem()
+			t[n][INDEX] = 0
+			n = n - 1
+		end
+		function swap(i, j)
+			t[0]=t[i]; t[i]=t[j]; t[j]=t[0]
+			t[i][INDEX] = i
+			t[j][INDEX] = j
+		end
+	else
+		function add(v)
+			n = n + 1
+			t = arr(n + 1) --elem 0 is temp space for swapping.
+			t[n] = v
+		end
+		function rem()
+			n = n - 1
+		end
+		function swap(i, j)
+			t[0]=t[i]; t[i]=t[j]; t[j]=t[0]
+		end
 	end
 	local function length()
 		return n
@@ -89,6 +135,8 @@ local function cdataheap(h)
 		or  function(i, j) return t[i] < t[j] end
 
 	local push, pop, rebalance = heap(add, rem, swap, length, cmp)
+
+	heap_mixin(h, INDEX)
 
 	local function get(i, box)
 		if not (i >= 1 and i <= n) then
@@ -118,6 +166,15 @@ local function cdataheap(h)
 		rebalance(i)
 	end
 	h.length = length
+	function h:remove(v)
+		local i = self:find(v)
+		if i then
+			self:pop(i)
+			return true
+		else
+			return false
+		end
+	end
 
 	return h
 end
@@ -127,30 +184,41 @@ end
 local function valueheap(h)
 	h = h or {}
 	local t, n = h, #h
-	local function add(v) n=n+1; t[n]=v end
-	local function rem() t[n]=nil; n=n-1 end
-	local function swap(i, j) t[i], t[j] = t[j], t[i] end
+	local add, rem, swap
+	local INDEX = h.index_key
+	if INDEX ~= nil then --for O(1) removal.
+		function add(v) n=n+1; t[n]=v; v[INDEX] = n end
+		function rem() t[n][INDEX] = nil; t[n]=nil; n=n-1 end
+		function swap(i, j)
+			t[i], t[j] = t[j], t[i]
+			t[i][INDEX] = i
+			t[j][INDEX] = j
+		end
+	else
+		function add(v) n=n+1; t[n]=v end
+		function rem() t[n]=nil; n=n-1 end
+		function swap(i, j) t[i], t[j] = t[j], t[i] end
+	end
 	local function length() return n end
 	local cmp = h.cmp
 		and function(i, j) return h.cmp(t[i], t[j]) end
 		or  function(i, j) return t[i] < t[j] end
 	local push, pop, rebalance = heap(add, rem, swap, length, cmp)
 
-	local function get(i)
-		return t[i]
-	end
+	heap_mixin(h, INDEX)
+
 	function h:push(v)
 		assert(v ~= nil, 'invalid value')
 		push(v)
 	end
 	function h:pop(i)
 		assert(n > 0, 'buffer underflow')
-		local v = get(i or 1)
+		local v = t[i or 1]
 		pop(i or 1)
 		return v
 	end
 	function h:peek(i)
-		return get(i or 1)
+		return t[i or 1]
 	end
 	function h:replace(i, v)
 		assert(i >= 1 and i <= n, 'invalid index')
@@ -158,7 +226,15 @@ local function valueheap(h)
 		rebalance(i)
 	end
 	h.length = length
-
+	function h:remove(v)
+		local i = self:find(v)
+		if i then
+			self:pop(i)
+			return true
+		else
+			return false
+		end
+	end
 	return h
 end
 

@@ -89,7 +89,7 @@ end
 local function benchmark()
 	local size = 100000
 	local function ngen(h) return math.random(1, size) end
-	bench('Lua values',  heap.valueheap{}                 , size, ngen)
+	bench('Lua values',  heap.valueheap{}, size, ngen)
 	bench('int32',       heap.cdataheap{ctype = 'int32_t'}, size, ngen)
 	local v3t = ffi.typeof'struct { double x, y, z; }'
 	local v3 = v3t()

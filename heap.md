@@ -7,8 +7,10 @@ tagline: priority queues
 Priority queues implemented as binary heaps. A binary heap is a binary
 tree that maintains the lowest (or highest) value at the root.
 The tree is laid as an implicit data structure over an array.
-Pushing and popping values from the heap is O(log(n)) and doesn't
-use additional memory.
+Pushing and popping values from the heap is O(log n).
+Removal is O(n) by default unless a key is reserved on the elements
+(assuming they're indexable) to store the element index which makes
+removal O(log n) too.
 
 ## API
 
@@ -16,10 +18,12 @@ use additional memory.
 `heap.heap(...) -> push, pop`    create a heap API from a stack API
 `heap.cdataheap(h) -> h`         create a fixed-capacity cdata-based heap
 `heap.valueheap([h]) -> h`       create a heap for Lua values
-`h:push(val) -> index`           push a value
-`h:pop([index][, dst]) -> val`   pop value (root value at default index 1)
-`h:replace(index, val)`          replace value at index
-`h:peek([index][, dst]) -> val`  get value without popping it
+`h:push(val) -> i`               push a value
+`h:pop([i][, dst]) -> val`       pop value (root value at default index 1)
+`h:replace(i, val)`              replace value at index
+`h:peek([i][, dst]) -> val`      get value without popping it
+`h:find(v) -> i`                 find value and return its index
+`h:remove(v) -> true|false`      find value and remove it
 `h:length() -> n`                number of elements in heap
 -------------------------------- ----------------------------------------------------
 
@@ -54,6 +58,9 @@ Create a cdata heap over table `h` which must contain:
   * `ctype`: element type (required).
   * `min_capacity`: heap starting capacity (optional, defaults to 0).
   * `cmp`: a comparison function (optional).
+  * `index_key`: enables O(1) `h:find(v)` and thus O(log n) `h:remove(v)`
+  at the price of setting `e[index_key]` on all elements of the heap,
+  otherwise `h:find(v)` is O(n) and `h:remove(v)` is O(n).
   * `dynarray`: alternative `glue.dynarray` implementation (optional).
 
 Note: `cdata` heaps are 1-indexed just like value heaps.
@@ -92,6 +99,9 @@ the order in which elements with the same priority are popped.
 Create a value heap from table `h`, which can contain:
 
   * `cmp`: a comparison function (optional).
+  * `index_key`: enables O(1) `h:find(v)` and thus O(log n) `h:remove(v)`
+  at the price of setting `e[index_key]` on all elements of the heap,
+  otherwise `h:find(v)` is O(n) and `h:remove(v)` is O(n).
   * a pre-allocated heap in the array part of the table (optional).
 
 Note: trying to push `nil` into a value heap raises an error.
