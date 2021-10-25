@@ -69,7 +69,7 @@ function heap_mixin(h, INDEX)
 	end
 
 	if INDEX ~= nil then
-		function h:find(v) --O(1)
+		function h:find(v) --O(log n)
 			return v[INDEX]
 		end
 	else
@@ -90,10 +90,10 @@ end
 local function cdataheap(h)
 
 	local ffi = require'ffi'
-	local glue = require'glue'
 
 	local ctype = ffi.typeof(h.ctype)
-	local arr = h.dynarray or glue.dynarray(ffi.typeof('$[?]', ctype), h.min_capacity)
+	local arr = h.dynarray
+		or require'glue'.dynarray(ffi.typeof('$[?]', ctype), h.min_capacity)
 	local t, n = nil, 0
 
 	local add, rem, swap
@@ -186,7 +186,7 @@ local function valueheap(h)
 	local t, n = h, #h
 	local add, rem, swap
 	local INDEX = h.index_key
-	if INDEX ~= nil then --for O(1) removal.
+	if INDEX ~= nil then --for O(log n) removal.
 		function add(v) n=n+1; t[n]=v; v[INDEX] = n end
 		function rem() t[n][INDEX] = nil; t[n]=nil; n=n-1 end
 		function swap(i, j)

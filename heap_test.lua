@@ -75,7 +75,7 @@ local function bench(type, h, size, valgen)
 	for i=1,size do
 	    h:push(valgen(h))
 	end
-	print(string.format('push speed: %-12s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
+	print(string.format('push speed: %-14s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
 	t0 = time.clock()
 	local v0 = h:pop()
 	for i=2,size do
@@ -83,13 +83,17 @@ local function bench(type, h, size, valgen)
 		assert(not cmp(v, v0))
 		v0 = v
 	end
-	print(string.format('pop  speed: %-12s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
+	print(string.format('pop  speed: %-14s: %6d Ke/s', type, size / 10^3 / (time.clock() - t0)))
 end
 
 local function benchmark()
 	local size = 100000
 	local function ngen(h) return math.random(1, size) end
 	bench('Lua values',  heap.valueheap{}, size, ngen)
+	local function tgen(h) return {n = math.random(1, size)} end
+	local function cmp(a, b) return a.n < b.n end
+	bench('Lua tables'  , heap.valueheap{cmp = cmp                 }, size, tgen)
+	bench('Lua tables/i', heap.valueheap{cmp = cmp, index_key = 'i'}, size, tgen)
 	bench('int32',       heap.cdataheap{ctype = 'int32_t'}, size, ngen)
 	local v3t = ffi.typeof'struct { double x, y, z; }'
 	local v3 = v3t()
