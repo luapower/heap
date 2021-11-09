@@ -69,7 +69,7 @@ function heap_mixin(h, INDEX)
 	end
 
 	if INDEX ~= nil then
-		function h:find(v) --O(log n)
+		function h:find(v) --O(1..logN)
 			return v[INDEX]
 		end
 	else
